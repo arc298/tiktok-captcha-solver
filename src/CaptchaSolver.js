@@ -101,8 +101,8 @@ class CaptchaSolver {
       const sliderContainer = await this.page.$(
         this.selectors.puzzleImageWrapper
       )
-      const sliderImage = await sliderContainer.screenshot()
-      const currentImage = await this._getCurrentImage(sliderImage)
+      const sliderImage = await sliderContainer.screenshot();
+      const currentImage = await this._resizeImage(sliderImage)
 
       const rembrandt = new Rembrandt({
         imageA: this.startImage,
@@ -250,10 +250,10 @@ class CaptchaSolver {
     })
   }
 
-  async _getCurrentImage(image) {
-    return Jimp.read(image)
-      .then((lenna) => lenna.resize(276, 172))
-      .then((jimp) => jimp.getBufferAsync(Jimp.MIME_JPEG))
+  async _resizeImage(image) {
+    const readResult = await Jimp.read(image);
+    const resize = await readResult.resize(276, 172);
+    return resize.getBufferAsync(Jimp.MIME_JPEG);
   }
 
   _syncOverlayPositionWithPuzzlePiece({ puzzlePiece, puzzlePieceOverlay }) {
@@ -270,16 +270,20 @@ class CaptchaSolver {
   _responseHandler() {
     let maxContentLength = -1
 
+    const captchaImageSubUrls = ['captcha-us.ibyteimg.com/', 'captcha-va.ibyteimg.com/']
+
     return async (response) => {
-      if (!response.url().includes('security-captcha')) return
+      const responseUrl = response.url();
+      if (!captchaImageSubUrls.find(x => responseUrl.includes(x)) || !responseUrl.includes('-2.jpeg')) return;
 
       const contentLength = Number(response.headers()['content-length'])
 
       if (contentLength > maxContentLength) {
         maxContentLength = contentLength
-        this.startImage = await (this.isPlaywright
+        this.startImage = await this._resizeImage(await (this.isPlaywright
           ? response.body()
           : response.buffer())
+        );
       }
     }
   }
