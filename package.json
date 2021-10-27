@@ -1,6 +1,6 @@
 {
   "name": "tiktok-captcha-solver",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Solves the TikTok captcha interactively using playwright or puppeteer.",
   "main": "index.js",
   "scripts": {
