@@ -267,21 +267,29 @@ class CaptchaSolver {
     document.querySelector(puzzlePiece).style.display = 'block'
   }
 
-  _responseHandler() {
-    let maxContentLength = -1
+  validCaptchaUrl(url) {
+    const matchesSecurityCaptchaUrl = url.includes('security-captcha')
 
     const captchaImageSubUrls = [
       'captcha-us.ibyteimg.com/',
       'captcha-va.ibyteimg.com/',
     ]
 
+    const matchesByteImgUrls =
+      captchaImageSubUrls.find((subUrl) => url.includes(subUrl)) &&
+      url.includes('-2.jpeg')
+
+    return matchesSecurityCaptchaUrl || matchesByteImgUrls
+  }
+
+  _responseHandler() {
+    let maxContentLength = -1
+
     return async (response) => {
       const responseUrl = response.url()
-      if (
-        !captchaImageSubUrls.find((x) => responseUrl.includes(x)) ||
-        !responseUrl.includes('-2.jpeg')
-      )
+      if (!this.validCaptchaUrl(responseUrl)) {
         return
+      }
 
       const contentLength = Number(response.headers()['content-length'])
 
