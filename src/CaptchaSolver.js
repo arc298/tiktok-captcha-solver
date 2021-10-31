@@ -101,12 +101,8 @@ class CaptchaSolver {
       const sliderContainer = await this.page.$(
         this.selectors.puzzleImageWrapper
       )
-      
-      const sliderImage = await this.page.screenshot({
-        clip: await sliderContainer.boundingBox(),
-      })
-
-      const currentImage = await this._resizeImage(sliderImage)
+      const sliderImage = await sliderContainer.screenshot()
+      const currentImage = await this._getCurrentImage(sliderImage)
 
       const rembrandt = new Rembrandt({
         imageA: this.startImage,
@@ -254,10 +250,10 @@ class CaptchaSolver {
     })
   }
 
-  async _resizeImage(image) {
-    const readResult = await Jimp.read(image)
-    const resize = await readResult.resize(276, 172)
-    return resize.getBufferAsync(Jimp.MIME_JPEG)
+  async _getCurrentImage(image) {
+    return Jimp.read(image)
+      .then((lenna) => lenna.resize(276, 172))
+      .then((jimp) => jimp.getBufferAsync(Jimp.MIME_JPEG))
   }
 
   _syncOverlayPositionWithPuzzlePiece({ puzzlePiece, puzzlePieceOverlay }) {
@@ -271,37 +267,19 @@ class CaptchaSolver {
     document.querySelector(puzzlePiece).style.display = 'block'
   }
 
-  validCaptchaUrl(url) {
-    const matchesSecurityCaptchaUrl = url.includes('security-captcha')
-
-    const captchaImageSubUrls = [
-      'captcha-us.ibyteimg.com/',
-      'captcha-va.ibyteimg.com/',
-    ]
-
-    const matchesByteImgUrls =
-      captchaImageSubUrls.find((subUrl) => url.includes(subUrl)) &&
-      url.includes('-2.jpeg')
-
-    return matchesSecurityCaptchaUrl || matchesByteImgUrls
-  }
-
   _responseHandler() {
     let maxContentLength = -1
 
     return async (response) => {
-      const responseUrl = response.url()
-      if (!this.validCaptchaUrl(responseUrl)) {
-        return
-      }
+      if (!response.url().includes('security-captcha')) return
 
       const contentLength = Number(response.headers()['content-length'])
 
       if (contentLength > maxContentLength) {
         maxContentLength = contentLength
-        this.startImage = await this._resizeImage(
-          await (this.isPlaywright ? response.body() : response.buffer())
-        )
+        this.startImage = await (this.isPlaywright
+          ? response.body()
+          : response.buffer())
       }
     }
   }

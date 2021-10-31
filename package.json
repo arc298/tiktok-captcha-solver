@@ -1,10 +1,10 @@
 {
   "name": "tiktok-captcha-solver",
-  "version": "0.0.6",
+  "version": "0.0.4",
   "description": "Solves the TikTok captcha interactively using playwright or puppeteer.",
   "main": "index.js",
   "scripts": {
-    "test": "node node_modules/.bin/jest --runInBand",
+    "test": "jest",
     "lint": "prettier --write --ignore-unknown ."
   },
   "keywords": [
