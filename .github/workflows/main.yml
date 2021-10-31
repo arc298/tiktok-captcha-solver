@@ -37,4 +37,4 @@ jobs:
         uses: microsoft/playwright-github-action@v1.4.4
 
       - name: Test
-        run: yarn test --ci --coverage --maxWorkers=2
+        run: yarn test --ci --coverage
